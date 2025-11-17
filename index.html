@@ -870,7 +870,7 @@
             pdfListPopup.innerHTML = '<li>⏳ Extracting ZIP...</li>';
             pdfListPopup.innerHTML = '';
             pdfContainerPopup.innerHTML = '';
-            listModal.querySelector('h3').textContent = `📂 Files in ZIP: ${zipFile.name}`;
+            listModal.querySelector('h3').textContent = `📂 Files in ${zipFile.name} :`;
             listModal.style.display = 'flex';
             extractedPdfsGlobal = {};
 
@@ -1367,3 +1367,4 @@
 </body>
 
 </html>
+
