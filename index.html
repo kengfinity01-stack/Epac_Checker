@@ -4,7 +4,9 @@
 <head>
   <meta charset="UTF-8" />
   <title>Epac Checker</title>
-  <link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAACXBIWXMAAAsTAAALEwEAmpwYAAAEK0lEQVR4nO2aW08TQRTHefLF7+CzL34R/Q4++mC3lWK4aEyESIWmuwiNRoqys6XdFkmAILRa266SGEXQyi1QFIghQS4Cy4MYa9QxZ3a3Fnpxuy3ShTnJP9nMmTlzzm9nZ3YLVVXUqFGjRo2abmu3ec+wFr6LZdASZ0G/OAbhI5UF/YJcICfIreowjWOEi5yF/3rkRefRHRv62WYT7GUv3HW15zTLIEGbqN89tLu+MItT20v4h7ysS897Y2TsYHU33qz34O0GRZsNHvzY/pD44mJUdzxNqZ0lvPFhFg97Qn9BVAsi5FyW4lkGnWUZNA2B26woNTYymio2yR87y7jrRpAkt1D3IF28puW6LuLrvB4gfYuOr2r6+Wvstvdoq2GRs/DnyrbkO6+LO2sLM4YSW5mZVAq08VnFa+q28aTPyvSkYQCgjY+zWLjVR2K1WfkUaxEuGSveghwQhGX436GHT7a+bS4aTkoKRklCkZruvACkGuUxgL6lAADtbX7Eoe4nGfsD31xU8S4GXTiMTSpZm738NS2qj8GdKwK+V+vLqwH3ULrQ/o6hgv6p+CvcfkVQ5r/Mny/m7scPA0Dm5ndQWw0e3K4jBmoSsZyUiFCjv6Af9LJ3SFsFMf0AGLQLgz69ieD1qVjJ0pLLV7wmt9qvUKyd+b/FwXUhPyhj/t1iAGBQZqBSVCyAcs17cH4KQK9xFACiADgKAFEAMgUgUQAyBSCVrM4Gn+7X5c5rvuMHYCYS1gUBip+NhI4fAPmIRQEwFACmAJgyAPA1B/65kflvBwsm8zkRwzFhgPxw0VEtEAlNImkDX0UD4HQeZfkSSYyMYLfdm3cc+BKh4coH4Jj4nlOFAEDxnFXxuxxh3DKygh1je0QtwyvY1az+rm9FZYdw5AA+J2LpO+98MJF3vLNrXFkJNV689j56fADEhAHlzjufYcd47rFE49+xqzVC+sa9A5UHoKNa+YnZMSpnJz8qE1+H3Zs1DjWKxEeWfb7iVcHjAH1hY6w4AIEW5RRw8omsxFv5BPEFndmnQKGNr9CGWHEA5uJhJZjNq0CAlTAqk2toA9+8FM4aB0djsQD8twOVB0BOSviFfzC9m++TFeEX4qChxMpV6H8BIMPX3dNQ+nEAwTV88RlNzHQA5DIVQAEwJwyArzmw71vhxAG4X6/890ZSCuOkpPz9HtpMB8CX46vwX1+BoChS3ggzFUX95gPgz3Gu6zm3t+YUCHDXQXANbaYDIJtMFABTIoBHriDuY3v3BTVTW8kAuBwrwkxthgF8mYri5PBgOsA7bzAts7RtTEaNA5gUe0kwT51AlDmBWdre+x8ZB/BODfZWVeYEZmozAmAVBkh3xX1BzSioQQWwqhsAy6DWgy86ppeFb9EN4ObNvlMqBLISTK5VqAVq0g2AGjVq1KhRo1Z1EuwPEskhjvL0ZpYAAAAASUVORK5CYII=">
+
+  <link rel="icon" type="image/png"
+    href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAACXBIWXMAAAsTAAALEwEAmpwYAAAEK0lEQVR4nO2aW08TQRTHefLF7+CzL34R/Q4++mC3lWK4aEyESIWmuwiNRoqys6XdFkmAILRa266SGEXQyi1QFIghQS4Cy4MYa9QxZ3a3Fnpxuy3ShTnJP9nMmTlzzm9nZ3YLVVXUqFGjRo2abmu3ec+wFr6LZdASZ0G/OAbhI5UF/YJcICfIreowjWOEi5yF/3rkRefRHRv62WYT7GUv3HW15zTLIEGbqN89tLu+MItT20v4h7ysS897Y2TsYHU33qz34O0GRZsNHvzY/pD44mJUdzxNqZ0lvPFhFg97Qn9BVAsi5FyW4lkGnWUZNA2B26woNTYymio2yR87y7jrRpAkt1D3IF28puW6LuLrvB4gfYuOr2r6+Wvstvdoq2GRs/DnyrbkO6+LO2sLM4YSW5mZVAq08VnFa+q28aTPyvSkYQCgjY+zWLjVR2K1WfkUaxEuGSveghwQhGX436GHT7a+bS4aTkoKRklCkZruvACkGuUxgL6lAADtbX7Eoe4nGfsD31xU8S4GXTiMTSpZm738NS2qj8GdKwK+V+vLqwH3ULrQ/o6hgv6p+CvcfkVQ5r/Mny/m7scPA0Dm5ndQWw0e3K4jBmoSsZyUiFCjv6Af9LJ3SFsFMf0AGLQLgz69ieD1qVjJ0pLLV7wmt9qvUKyd+b/FwXUhPyhj/t1iAGBQZqBSVCyAcs17cH4KQK9xFACiADgKAFEAMgUgUQAyBSCVrM4Gn+7X5c5rvuMHYCYS1gUBip+NhI4fAPmIRQEwFACmAJgyAPA1B/65kflvBwsm8zkRwzFhgPxw0VEtEAlNImkDX0UD4HQeZfkSSYyMYLfdm3cc+BKh4coH4Jj4nlOFAEDxnFXxuxxh3DKygh1je0QtwyvY1az+rm9FZYdw5AA+J2LpO+98MJF3vLNrXFkJNV689j56fADEhAHlzjufYcd47rFE49+xqzVC+sa9A5UHoKNa+YnZMSpnJz8qE1+H3Zs1DjWKxEeWfb7iVcHjAH1hY6w4AIEW5RRw8omsxFv5BPEFndmnQKGNr9CGWHEA5uJhJZjNq0CAlTAqk2toA9+8FM4aB0djsQD8twOVB0BOSviFfzC9m++TFeEX4qChxMpV6H8BIMPX3dNQ+nEAwTV88RlNzHQA5DIVQAEwJwyArzmw71vhxAG4X6/890ZSCuOkpPz9HtpMB8CX46vwX1+BoChS3ggzFUX95gPgz3Gu6zm3t+YUCHDXQXANbaYDIJtMFABTIoBHriDuY3v3BTVTW8kAuBwrwkxthgF8mYri5PBgOsA7bzAts7RtTEaNA5gUe0kwT51AlDmBWdre+x8ZB/BODfZWVeYEZmozAmAVBkh3xX1BzSioQQWwqhsAy6DWgy86ppeFb9EN4ObNvlMqBLISTK5VqAVq0g2AGjVq1KhRo1Z1EuwPEskhjvL0ZpYAAAAASUVORK5CYII=">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
@@ -688,7 +690,7 @@
             btnQry.className = 'custom-button';
             btnQry.textContent = '📤 Open Epac';
             btnQry.style.float = 'left';
-            
+
             btnQry.onclick = function () {
               window.open(
                 `https://w2-certiq.sgs.com/MODULES/Pages/ePac/MyTaskPage?Dept=All&AdminTask=0&Integrated=0&RS=1&ContractNo=${searchTerm}`,
@@ -699,7 +701,7 @@
             btnCertIQ.className = 'custom-button';
             btnCertIQ.textContent = '📤 CertIQ';
             btnCertIQ.style.float = 'left';
-            
+
             btnCertIQ.onclick = function () {
               window.open(`https://w2-certiq.sgs.com/spa/work/contract/${encodeURIComponent(searchTerm)}`, '_blank');
             };
@@ -707,7 +709,7 @@
             btnZipOpen.className = 'custom-button';
             btnZipOpen.textContent = '🗂️ Open Zip file';
             btnZipOpen.style.float = 'left';
-            
+
             btnZipOpen.onclick = function () {
               openZipPdfList(file);
             };
@@ -866,10 +868,17 @@
             const pdfListPopup = document.getElementById('pdfListPopup');
             const pdfContainerPopup = document.getElementById('pdfContainerPopup');
             pdfListPopup.innerHTML = '<li>⏳ Extracting ZIP...</li>';
+            pdfListPopup.innerHTML = '';
             pdfContainerPopup.innerHTML = '';
-
+            listModal.querySelector('h3').textContent = `📂 Files in ZIP: ${zipFile.name}`;
             listModal.style.display = 'flex';
             extractedPdfsGlobal = {};
+
+            // Add file name heading
+            const fileNameHeading = document.createElement('h4');
+            fileNameHeading.textContent = `File: ${zipFile.name}`;
+            pdfListPopup.appendChild(fileNameHeading);
+
 
             const zip = await JSZip.loadAsync(zipFile);
             pdfListPopup.innerHTML = '';
@@ -1358,5 +1367,3 @@
 </body>
 
 </html>
-
-
