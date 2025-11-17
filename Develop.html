@@ -1,0 +1,1359 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <title>EPAC check Zip files and Report</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <!-- added for text extraction -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+
+
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0px;
+      background-color: #f9f9f9;
+      background-image: url("https://img.freepik.com/premium-photo/magnify-glass-search-bar_1224603-598.jpg");
+      background-repeat: no-repeat;
+      background-attachment: fixed;
+      background-size: cover;
+    }
+
+    input[type="file"] {
+      width: 100%;
+      margin: 10px 0;
+    }
+
+    .found {
+      color: green;
+    }
+
+    .partial {
+      color: orange;
+    }
+
+    .missing {
+      color: red;
+    }
+
+    #results {
+      margin-top: 20px;
+    }
+
+    .zip-title {
+      font-weight: bold;
+      margin-bottom: 10px;
+      font-size: 1.1em;
+    }
+
+    button {
+      margin-right: 10px;
+    }
+
+    footer {
+      text-align: center;
+      background-color: #f2f2f2;
+      font-size: 13px;
+      color: #555;
+      position: fixed;
+      bottom: 0;
+      width: 100%;
+      border-top: 1px solid #ddd;
+    }
+
+    .custom-button {
+      background-color: #4CAF50;
+      color: white;
+      padding: 10px 20px;
+      margin: 10px;
+      border: none;
+      border-radius: 15px;
+      cursor: pointer;
+      font-size: 16px;
+      transition: background-color 0.3s ease;
+    }
+
+    .custom-button:hover:enabled {
+      background-color: #3c8b40;
+    }
+
+
+    .custom-button:disabled {
+      background-color: #ccc;
+      color: #888;
+      cursor: not-allowed;
+    }
+
+    #zipInput {
+      display: none;
+    }
+
+    .file-upload-label {
+      display: inline-block;
+      background-color: #4CAF50;
+      color: white;
+      margin: 5px;
+      padding: 10px 20px;
+      font-size: 16px;
+      border: none;
+      border-radius: 15px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    .file-upload-label:hover {
+      background-color: #3c8b40;
+    }
+
+    #output {
+      margin-top: 20px;
+      font-family: Arial, sans-serif;
+    }
+
+    .zip-info {
+      margin-bottom: 10px;
+    }
+
+    .top-left-logo {
+      position: absolute;
+      /* Ensures it's pinned to the top-left */
+      top: 10px;
+      /* Distance from the top of the page */
+      left: 10px;
+      /* Distance from the left side */
+      width: 100px;
+      /* Adjust size as needed */
+      height: auto;
+    }
+
+    .zip-block {
+      border: 2px solid #ccc;
+      padding: 15px;
+      margin-bottom: 20px;
+      border-radius: 45px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+      width: 540px;
+      background-color: #fff;
+      padding-bottom: 30px;
+    }
+
+    .result-entry {
+      padding: 6px 10px;
+      margin: 4px 0;
+      border-left: 4px solid;
+      border-radius: 4px;
+      background-color: #fff;
+    }
+
+    .result-entry.found {
+      border-color: #4CAF50;
+      background-color: #e8f5e9;
+      width: 430px;
+    }
+
+    .result-entry.partial {
+      border-color: #FFC107;
+      background-color: #fff8e1;
+      width: 430px;
+    }
+
+    .result-entry.missing {
+      border-color: #F44336;
+      background-color: #ffebee;
+      width: 430px;
+    }
+
+    .result-entry.cdc {
+      border-color: #b575aa;
+      background-color: #eee3ec;
+      width: 430px;
+    }
+
+    @media (max-width: 600px) {
+      .zip-title {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .custom-button,
+      .file-upload-label {
+        width: 100%;
+        margin-top: 10px;
+      }
+
+      .zip-title button {
+        margin-left: 0;
+        /* Remove left margin on mobile */
+        margin-top: 10px;
+      }
+    }
+
+    .header-bar {
+
+      background-color: #f8f8f8;
+      /* light grey background */
+      padding: 30px 20px;
+      display: flex;
+      align-items: center;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+      border-bottom: 3px solid #ff9c07;
+    }
+
+    #results {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 60px;
+      /* space between boxes */
+      justify-content: flex-start;
+    }
+
+    .newbody {
+      background-color: #fff8e1;
+      margin: 8px;
+      border-radius: 30px;
+      padding: 10px;
+    }
+
+    .rau-checkbox {
+      -webkit-appearance: none;
+      appearance: none;
+      position: relative;
+      width: 56px;
+      height: 30px;
+      border-radius: 15px;
+      border: 2px solid #c3c1c1;
+      background: #efefef;
+      cursor: pointer;
+      outline: none;
+      transition: background 0.15s, border-color 0.15s;
+      vertical-align: middle;
+      margin-left: 8px;
+      margin-right: 6px;
+    }
+
+    .rau-checkbox::before {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 4px;
+      transform: translateY(-50%);
+      width: 22px;
+      height: 22px;
+      background: #fff;
+      border-radius: 50%;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+      transition: left 0.15s, box-shadow 0.15s;
+    }
+
+    .rau-checkbox::after {
+      content: "Off";
+      position: absolute;
+      right: 7px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 12px;
+      color: #666;
+      font-family: Arial, sans-serif;
+      transition: color 0.15s, left 0.15s;
+    }
+
+    .rau-checkbox:checked {
+      background: #0071e3;
+      border-color: #0071e3;
+    }
+
+    .rau-checkbox:checked::before {
+      left: calc(100% - 26px);
+      box-shadow: none;
+    }
+
+    .rau-checkbox:checked::after {
+      content: "On";
+      left: 5px;
+      right: auto;
+      color: #ffffff;
+    }
+
+    :root {
+      --bg: #e3e4e8;
+      --fg: #17181c;
+      --input: #ffffff;
+      --primary: #255ff4;
+      --dur: 1s;
+    }
+
+    .search-form {
+      position: relative;
+      width: 100%;
+      max-width: 17em;
+      margin: 10px 0;
+    }
+
+    .search-form input {
+      background: transparent;
+      border-radius: 50%;
+      box-shadow: 0 0 0 0.25em inset;
+      caret-color: var(--primary);
+      width: 2em;
+      height: 2em;
+      transition: all calc(var(--dur) * 0.5) linear;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+      color: var(--fg);
+    }
+
+    .search-form input:focus,
+    .search-form input:valid {
+      background: var(--input);
+      border-radius: 0.25em;
+      box-shadow: none;
+      padding: 0.75em 1em;
+      transition-duration: calc(var(--dur) * 0.25);
+      transition-delay: calc(var(--dur) * 0.25);
+      width: 100%;
+      height: 3em;
+    }
+
+    .search-form .caret {
+      background: currentColor;
+      border-radius: 0 0 0.125em 0.125em;
+      margin-bottom: -0.6em;
+      width: 0.25em;
+      height: 1em;
+      transform: translate(0, -1em) rotate(-45deg) translate(0, 0.875em);
+      transform-origin: 50% 0;
+      transition: all calc(var(--dur) * 0.5) linear;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 2000;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.6);
+      justify-content: center;
+      align-items: center;
+    }
+
+    .modal-content {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      width: 30%;
+      max-height: 80%;
+      overflow-y: auto;
+      position: relative;
+    }
+
+    .modal-content.large {
+      width: 80%;
+    }
+
+    .close-btn {
+      position: absolute;
+      top: 10px;
+      right: 15px;
+      font-size: 30px;
+      cursor: pointer;
+      color: #333;
+    }
+
+    #pdfContainerPopup canvas {
+      display: block;
+      margin: 10px auto;
+      border: 1px solid #ccc;
+    }
+
+    .word-page {
+      width: 800px;
+      min-height: 1120px;
+      margin: 20px auto;
+      padding: 40px;
+      background: white;
+      box-shadow: 0 0 6px rgba(0, 0, 0, 0.2);
+      page-break-after: always;
+    }
+
+    .word-container {
+      background: #f0f0f0;
+      padding: 20px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="header-bar">
+    <img src="https://companieslogo.com/img/orig/SGSN.SW-1f304f32.png?t=1684305329" alt="Company Logo"
+      class="top-left-logo">
+  </div>
+  <br><br><br>
+  <div class="container">
+    <div class="newbody">
+      <header style="margin-bottom: 30px;">
+        <h1 style="font-size: 28px; margin-bottom: 10px;">📦 EPAC ZIP Checker</h1>
+        <p style="color: #555; margin: 5px;">Analyze and export ZIP file contents efficiently.</p>
+        <h3 style="color: #e21313; margin: 5px; ">*Epac CertIQ must be open along (If you want to Query)*</h3>
+      </header>
+      <!-- Label list -->
+      <!--<div id="labelList" style="font-weight:bold; margin-bottom:20px;">
+    04, Customer Report, Internal Report , 06, 07, 08, 12 CDS, 13 Next, 14 APM, 16 CHR, 17 CONTRACT, 18 Cert, 18 ACR, 18 CS, CDC, CDC Report
+    </div>-->
+
+      <!-- Hidden file input -->
+      <input type="file" id="zipInput" accept=".zip" multiple />
+      <!-- Label that looks like a button -->
+      <label for="zipInput" class="file-upload-label">🗂️Upload ZIP Files</label>
+
+
+      <!-- Output area -->
+      <div id="output"></div><br>
+      <div id="summaryBar" style="margin-bottom:20px; font-weight:bold;"></div>
+      <br>
+      <button class="custom-button" onclick="checkMultipleZips()">🔍Check ZIP Files</button>
+      <button class="custom-button" id="exportBtn" onclick="exportToExcel()" disabled>📤Export to Excel</button>
+
+
+
+
+      <div id="results"></div>
+      <div id="pdfListModal" class="modal">
+        <div class="modal-content">
+          <span class="close-btn" id="closeListModal">&times;</span>
+          <h3>📂 Files in ZIP</h3>
+          <ul id="pdfListPopup"></ul>
+        </div>
+      </div>
+
+      <!-- 🔹 PDF Viewer Modal -->
+      <div id="pdfViewerModal" class="modal">
+        <div class="modal-content large">
+          <span class="close-btn" id="closePdfModal">&times;</span>
+          <div id="pdfContainerPopup"></div>
+        </div>
+      </div>
+      <script>
+        let fileLocations = new Map(); // Store file paths
+        document.getElementById('zipInput').addEventListener('change', function (event) {
+          const files = Array.from(event.target.files);
+          // Store file paths
+          files.forEach(file => {
+            // Get the full path (this only works for uploaded files)
+            const filePath = file.webkitRelativePath || file.name;
+            fileLocations.set(file.name, filePath);
+          });
+
+
+          // Filter only .zip files (in case other types slip in)
+          const zipFiles = files.filter(file => file.name.endsWith('.zip'));
+
+          // Show count
+          const output = document.getElementById('output');
+          output.textContent = `🗂️ ${zipFiles.length} file(s) selected`;
+        });
+
+
+
+        // for getting labels
+        function getLabelsForFile() {
+          return ["04", "Customer report", "Internal report", "06", "07", "08", "12 CDS", "13 Next", "14 APM", "16 CHR", "17 CONTRACT", "18 Cer", "18 ACR", "18 CS", "12 CDC", "CDC Report"];
+        }
+
+        let allResults = []; // Store all results for export
+
+        function normalize(text) {
+          return text.trim().toLowerCase();
+        }
+
+        async function checkZipFile(zipFile, labels, isRAUChecked) {
+          const zip = await JSZip.loadAsync(zipFile);
+          const fileNames = Object.keys(zip.files).map(name => normalize(name));
+          //const searchText = document.getElementById("searchText").value.trim().toLowerCase();
+          // const containsCustomerReport = fileNames.some(name => name.includes('customer report'));
+          // const containsInternalReport = fileNames.some(name => name.includes('internal report'));
+
+          const results = [];
+
+          labels.forEach(label => {
+            let status = "none";
+            let found = false;
+
+            const lowerLabel = label.toLowerCase().trim();
+            const parts = lowerLabel.split(/\s+/);
+
+            // === Special Cases First ===
+            switch (label) {
+              case "04":
+                found = fileNames.some(name => {
+                  const baseName = name.split('/').pop(); // get file name only
+                  return baseName.startsWith("04-") || baseName.startsWith("11-");
+                });
+                status = found ? "full" : "none";
+                break;
+
+              case "06":
+                found = fileNames.some(name => {
+                  const baseName = name.split('/').pop(); // get file name only
+                  return baseName.startsWith("06-");
+                });
+                status = found ? "full" : "none";
+                break;
+
+              case "07":
+                found = fileNames.some(name => {
+                  const baseName = name.split('/').pop(); // get file name only
+                  return baseName.startsWith("07-");
+                });
+                status = found ? "full" : "none";
+                break;
+
+              case "08":
+                found = fileNames.some(name => {
+                  const baseName = name.split('/').pop(); // get file name only
+                  return baseName.startsWith("08-");
+                });
+                status = found ? "full" : "none";
+                break;
+
+              default:
+                // Generic match for any other label not covered above
+                found = fileNames.some(name =>
+                  parts.every(part => name.toLowerCase().includes(part))
+                );
+                status = found ? "full" : "none";
+            }
+
+            // Special rule for "4" → fallback to "4"
+            if (label === "customer report" && !found) {
+
+              found = fileNames.some(name => name.includes("visit report"));
+              if (found) {
+                status = "full";
+              }
+            }
+
+
+            // Special rule for "13 Next" → fallback to "Cer"
+            if (label === "13 Next" && !found) {
+              found = fileNames.some(name => {
+                const baseName = name.split('/').pop(); // get file name only
+                return baseName.startsWith("13-");
+              });
+              if (found) {
+                status = "full";
+              }
+            }
+            // Special rule for "14 APM" → fallback to "Cer"
+            if (label === "14 APM" && !found) {
+              found = fileNames.some(name => name.includes("apm"));
+              if (found) {
+                status = "full";
+              }
+            }
+
+
+            // Special rule for "17 CONTRACT"
+            if (label === "17 CONTRACT" && !found) {
+              found = fileNames.some(name => name.includes("contract"));
+              if (found) {
+                status = "full";
+              }
+            }
+
+
+            // Special rule for "18 Cer" → fallback to "Cer"
+            if (label === "18 Cer" && !found) {
+              found = fileNames.some(name => name.includes("cer"));
+              if (found) {
+                status = "full";
+              }
+            }
+            // Special rule for "18 Cer" → fallback to "Cer"
+            if (label === "18 ACR" && !found) {
+              found = fileNames.some(name => name.includes("acr"));
+              if (found) {
+                status = "full";
+              }
+            }
+            // Special rule for "18 CS" → fallback to "18 SC"
+            if (label === "18 CS" && !found) {
+              const fallbackParts = ["18", "sc"];
+              found = fileNames.some(name =>
+                fallbackParts.every(part => name.includes(part))
+              );
+              if (found) {
+                status = "full";
+              }
+            }
+            if (label === "16 CHR" && !isRAUChecked) {
+              status = "partial"; // show "-" in Excel
+            }
+
+            // Special rule for "18 Cer" → fallback to "Cer"
+            if (label === "12 CDC" && found) {
+
+              status = "cdc";
+
+            }
+
+            // Special rule for "CDC REPORT" → fallback to "Cer"
+            if (label === "CDC Report" && found) {
+
+              status = "partial";
+
+            }
+            results.push({ label, found, status });
+          });
+
+
+
+          return results;
+        }
+
+
+        async function checkMultipleZips() {
+          const input = document.getElementById('zipInput');
+          const files = input.files;
+          const resultsDiv = document.getElementById('results');
+          resultsDiv.innerHTML = '';
+          allResults = [];
+
+          if (!files.length) {
+            resultsDiv.textContent = "❗ Please select one or more ZIP files.";
+            document.getElementById('exportBtn').disabled = true;
+            return;
+          }
+
+          for (const file of files) {
+            const container = document.createElement('div');
+            container.className = 'zip-block';
+
+            // --- ZIP Title and RAU checkbox ---
+
+            const titleRow = document.createElement('div');
+            titleRow.className = 'zip-title';
+            titleRow.style.display = 'flex'; // ✅ Enable flexbox
+            titleRow.style.justifyContent = 'space-between'; // Space between left & right
+            titleRow.style.alignItems = 'center';
+            titleRow.style.width = '100%';
+
+            // Left side: File name
+            const leftSide = document.createElement('div');
+            leftSide.style.display = 'flex';
+            leftSide.style.alignItems = 'center';
+
+            const titleText = document.createElement('span');
+            titleText.textContent = `File: ${file.name}`;
+            leftSide.appendChild(titleText);
+
+            // Right side: Label + Checkbox
+            const rightSide = document.createElement('div');
+            rightSide.style.display = 'flex';
+            rightSide.style.alignItems = 'center';
+            rightSide.style.gap = '10px';
+
+            const rauLabel = document.createElement('label');
+            rauLabel.setAttribute('for', `rau-${file.name}`);
+            rauLabel.textContent = 'Last Visit';
+
+            const rauCheckbox = document.createElement('input');
+            rauCheckbox.type = 'checkbox';
+            rauCheckbox.id = `rau-${file.name}`;
+            rauCheckbox.className = 'rau-checkbox';
+            // Add "Open Website" button
+            const btn = document.createElement('button');
+            btn.className = 'custom-button';
+            btn.textContent = '📤 Upload DMS';
+            btn.style.float = 'right';
+            const searchTerm = encodeURIComponent(file.name.split("-")[0]);
+            btn.onclick = function () {
+              window.open(
+                `https://sgs.sharepoint.com/sites/th-it-filesharingbhq/KN%20DMS/Forms/AllItems.aspx?viewid=04d26f80%2Dc10f%2D4785%2Dadbc%2Def5858dad210&view=7&q=${searchTerm}`,
+                '_blank'
+              );
+            };
+
+            const btnQry = document.createElement('button');
+            btnQry.className = 'custom-button';
+            btnQry.textContent = '📤 Open Epac';
+            btnQry.style.float = 'left';
+            
+            btnQry.onclick = function () {
+              window.open(
+                `https://w2-certiq.sgs.com/MODULES/Pages/ePac/MyTaskPage?Dept=All&AdminTask=0&Integrated=0&RS=1&ContractNo=${searchTerm}`,
+                '_blank'
+              );
+            };
+            const btnCertIQ = document.createElement('button');
+            btnCertIQ.className = 'custom-button';
+            btnCertIQ.textContent = '📤 CertIQ';
+            btnCertIQ.style.float = 'left';
+            
+            btnCertIQ.onclick = function () {
+              window.open(`https://w2-certiq.sgs.com/spa/work/contract/${encodeURIComponent(searchTerm)}`, '_blank');
+            };
+            const btnZipOpen = document.createElement('button');
+            btnZipOpen.className = 'custom-button';
+            btnZipOpen.textContent = '🗂️ Open Zip file';
+            btnZipOpen.style.float = 'left';
+            
+            btnZipOpen.onclick = function () {
+              openZipPdfList(file);
+            };
+            // Add a text search input inside the ZIP result block
+            const searchDiv = document.createElement('div');
+            searchDiv.style.marginTop = '10px';
+
+            const searchLabel = document.createElement('label');
+            searchLabel.textContent = '🔍 Search text in this ZIP: ';
+            searchLabel.style.marginRight = '5px';
+
+            const searchInput = document.createElement('input');
+            searchInput.type = 'text';
+            searchInput.id = "searchText"
+            searchInput.placeholder = 'Enter keyword...';
+            searchInput.style.width = '245px';
+            searchInput.style.padding = '3px';
+
+            const searchBtn = document.createElement('button');
+            searchBtn.textContent = 'Search';
+            searchBtn.className = 'custom-button';
+            searchBtn.style.marginLeft = '5px';
+            searchBtn.style.fontSize = '12px';
+
+
+            // wire search button to search within this zip only (must be inside the loop)
+            searchBtn.onclick = async function () {
+              const keyword = searchInput.value.trim().toLowerCase();
+              if (!keyword) {
+                searchResultsDiv.textContent = "⚠️ Enter keyword to search.";
+                return;
+              }
+
+              searchBtn.disabled = true;
+              searchResultsDiv.textContent = '⏳ Searching ...';
+
+              try {
+                await searchTextInZip(file, getLabelsForFile(rauCheckbox.checked), keyword, resultContainer, searchResultsDiv);
+                searchResultsDiv.textContent = '🔎 Search complete.';
+              } catch (err) {
+                console.error(err);
+                searchResultsDiv.textContent = '❗ Search error.';
+              } finally {
+                searchBtn.disabled = false;
+              }
+            };
+
+
+
+            const searchResultsDiv = document.createElement('div');
+            searchResultsDiv.style.marginTop = '5px';
+
+
+            rightSide.appendChild(rauLabel);
+            rightSide.appendChild(rauCheckbox);
+            titleRow.appendChild(leftSide);
+            titleRow.appendChild(rightSide);
+            searchDiv.appendChild(searchLabel);
+            searchDiv.appendChild(searchInput);
+            searchDiv.appendChild(searchBtn);
+
+            container.appendChild(titleRow);
+            container.appendChild(searchDiv);
+            container.appendChild(searchResultsDiv);
+
+            searchDiv.style.marginTop = '10px';
+            searchDiv.style.width = '100%';
+            // Result container that we will update dynamically
+            const resultContainer = document.createElement('div');
+            container.appendChild(resultContainer);
+            document.getElementById('results').appendChild(container);
+            container.appendChild(btn);
+            //container.appendChild(btnCertIQ);
+            container.appendChild(btnQry);
+            container.appendChild(btnZipOpen);
+            // Function to refresh results
+            async function refreshResults() {
+              const isRAUChecked = rauCheckbox.checked;
+              const labelSet = getLabelsForFile(isRAUChecked);
+
+              // Clear old results
+              resultContainer.innerHTML = '';
+
+              try {
+                const labelResults = await checkZipFile(file, labelSet, isRAUChecked);
+
+                labelResults.forEach(({ label, status }) => {
+                  const div = document.createElement('div');
+                  div.className = 'result-entry';
+
+                  const searchResultSpan = document.createElement('span');
+                  searchResultSpan.className = 'search-result';
+                  searchResultSpan.dataset.label = label;
+                  searchResultSpan.style.marginLeft = '8px';
+                  searchResultSpan.style.fontSize = '0.9em';
+                  searchResultSpan.style.color = '#333';
+                  if (status === "full") {
+                    const SearchResult = document.createElement('label');
+                    div.textContent = `✅ Found: "${label}"`;
+                    div.classList.add('found');
+                    div.appendChild(searchResultSpan);
+
+                    //SearchResult.id = "SearchResult";
+                    //div.appendChild(SearchResult);
+                  }
+                  else if (status === "partial") {
+                    //const SearchResult = document.createElement('label');
+                    div.textContent = `➖ Partial: "${label}"`;
+                    div.classList.add('partial');
+                    //div.appendChild(searchResultSpan);
+                    //SearchResult.id = "SearchResult";
+                    //div.appendChild(SearchResult);
+                  }
+                  else if (status === "cdc") {
+                    const SearchResult = document.createElement('label');
+                    div.textContent = `🟣 CDC Found: "${label}"`;
+                    div.style.color = "#9A59BA";
+                    //SearchResult.id = "SearchResult";
+                    div.classList.add('cdc');
+                    div.appendChild(searchResultSpan);
+                    //div.appendChild(SearchResult);
+                  }
+                  else {
+                    div.textContent = `❌ Missing: "${label}"`;
+                    div.classList.add('missing');
+                    // leave searchResultSpan empty for missing entries
+                    div.appendChild(searchResultSpan);
+                  }
+
+
+                  resultContainer.appendChild(div);
+                });
+              }
+              catch (err) {
+                console.error("Error checking ZIP:", err);
+                const errorDiv = document.createElement('div');
+                errorDiv.textContent = '⚠️ Error reading ZIP file.';
+                errorDiv.className = 'missing';
+                resultContainer.appendChild(errorDiv);
+              }
+            }
+
+            // Initial check
+            await refreshResults();
+
+            // Add event listener for checkbox
+            rauCheckbox.addEventListener('change', refreshResults);
+          }
+
+
+          // Store extracted PDFs temporarily
+          let extractedPdfsGlobal = {};
+
+          async function openZipPdfList(zipFile) {
+            const listModal = document.getElementById('pdfListModal');
+            const pdfListPopup = document.getElementById('pdfListPopup');
+            const pdfContainerPopup = document.getElementById('pdfContainerPopup');
+            pdfListPopup.innerHTML = '<li>⏳ Extracting ZIP...</li>';
+            pdfContainerPopup.innerHTML = '';
+
+            listModal.style.display = 'flex';
+            extractedPdfsGlobal = {};
+
+            const zip = await JSZip.loadAsync(zipFile);
+            pdfListPopup.innerHTML = '';
+
+            for (const fileName in zip.files) {
+              if (/\.(pdf|docx?|)$/i.test(fileName)) {
+                const file = zip.files[fileName];
+                extractedPdfsGlobal[fileName] = file;
+
+                // Create a "card" button for the file
+                const fileButton = document.createElement('button');
+                fileButton.textContent = fileName;
+                fileButton.style.display = 'block';
+                fileButton.style.width = '80%';
+                fileButton.style.padding = '10px 15px';
+                fileButton.style.margin = '5px 0';
+                fileButton.style.border = '1px solid #9970cd';
+                fileButton.style.borderRadius = '6px';
+                fileButton.style.background = 'white';
+                fileButton.style.color = '#9970cd';
+                fileButton.style.cursor = 'pointer';
+                fileButton.style.textAlign = 'left';
+                fileButton.style.transition = 'all 0.2s ease';
+
+                // Hover effect
+                fileButton.addEventListener('mouseenter', () => {
+                  fileButton.style.background = '#9970cd';
+                  fileButton.style.color = 'white';
+                });
+                fileButton.addEventListener('mouseleave', () => {
+                  fileButton.style.background = 'white';
+                  fileButton.style.color = '#9970cd';
+                });
+
+                // Click behavior
+                fileButton.addEventListener('click', async () => {
+                  if (fileName.toLowerCase().endsWith('.pdf')) {
+                    openPdfFromZip(fileName);
+                  } else {
+                    openWordFromZip(fileName);
+                  }
+                });
+
+                pdfListPopup.appendChild(fileButton);
+              }
+            }
+
+
+            if (Object.keys(extractedPdfsGlobal).length === 0) {
+              pdfListPopup.innerHTML = '<li>No PDF files found in this ZIP.</li>';
+            }
+          }
+
+          async function openPdfFromZip(fileName) {
+            const pdfViewerModal = document.getElementById('pdfViewerModal');
+            const pdfContainerPopup = document.getElementById('pdfContainerPopup');
+            pdfContainerPopup.innerHTML = `<p>📄 Loading ${fileName}...</p>`;
+            pdfViewerModal.style.display = 'flex';
+
+            const pdfFile = extractedPdfsGlobal[fileName];
+            const pdfData = await pdfFile.async('uint8array');
+
+            const pdf = await pdfjsLib.getDocument(pdfData).promise;
+            pdfContainerPopup.innerHTML = `<h3>${fileName}</h3>`;
+
+            for (let i = 1; i <= pdf.numPages; i++) {
+              const page = await pdf.getPage(i);
+              const viewport = page.getViewport({ scale: 1.2 });
+              const canvas = document.createElement('canvas');
+              const ctx = canvas.getContext('2d');
+              canvas.height = viewport.height;
+              canvas.width = viewport.width;
+              pdfContainerPopup.appendChild(canvas);
+              await page.render({ canvasContext: ctx, viewport }).promise;
+            }
+          }
+
+
+          async function openWordFromZip(fileName) {
+            const modal = document.getElementById('pdfViewerModal');
+            const container = document.getElementById('pdfContainerPopup');
+            container.innerHTML = `<p>📄 Loading ${fileName}...</p>`;
+            modal.style.display = 'flex';
+
+            const wordFile = extractedPdfsGlobal[fileName];
+            const arrayBuffer = await wordFile.async('arraybuffer');
+
+            try {
+              // --- Body via Mammoth ---
+              const result = await mammoth.convertToHtml({ arrayBuffer });
+
+              // --- Footers via JSZip ---
+              const zip = await JSZip.loadAsync(arrayBuffer);
+              let footerText = "";
+
+              async function getFooterText(path) {
+                if (!zip.files[path]) return "";
+                const xmlContent = await zip.files[path].async("string");
+                const parser = new DOMParser();
+                const xmlDoc = parser.parseFromString(xmlContent, "application/xml");
+                const texts = xmlDoc.getElementsByTagName("w:t");
+                if (!texts) return "";
+                return Array.from(texts).map(t => t.textContent).join(" ");
+              }
+
+              for (const filePath in zip.files) {
+                if (filePath.startsWith("word/footer") && filePath.endsWith(".xml")) {
+                  footerText += await getFooterText(filePath) + "\n";
+                }
+              }
+
+              // --- Display body + footer ---
+              container.innerHTML = `<h3>${fileName}</h3>
+                           ${result.value}
+                           <h4>📌 Footer:</h4>
+                           <pre>${footerText || "(No footer found)"}</pre>`;
+            } catch (err) {
+              container.innerHTML = `<p>❌ Please Check in ORIGINAL file (${err.message})</p>`;
+            }
+          }
+
+
+
+          // Close modal handlers
+          document.getElementById('closeListModal').onclick = () => {
+            document.getElementById('pdfListModal').style.display = 'none';
+          };
+          document.getElementById('closePdfModal').onclick = () => {
+            document.getElementById('pdfViewerModal').style.display = 'none';
+          };
+
+          // Close by clicking outside modal
+          window.onclick = (e) => {
+            if (e.target.classList.contains('modal')) {
+              e.target.style.display = 'none';
+            }
+          };
+
+          // normalize string for search
+          function normalizeForSearch(s) {
+            if (!s) return '';
+            // decode simple HTML entities and normalize spaces & ampersand spacing
+            try {
+              const ta = document.createElement('textarea');
+              ta.innerHTML = s;
+              s = ta.value;
+            } catch (e) {
+              s = s.replace(/&amp;/g, '&');
+            }
+
+            return s
+              .toLowerCase()
+              .replace(/[\xA0\u2000-\u200A\u202F\u205F\u3000]/g, ' ') // normalize weird spaces
+              .replace(/[\u0000-\u001F\u007F-\u009F]/g, ' ') // remove control chars
+              .replace(/\s*&\s*/g, ' & ') // normalize spaces around &
+              .replace(/\s+/g, ' ') // collapse multiple spaces
+              .trim();
+          }
+
+
+          async function extractTextFromEntry(entry) {
+
+            const [name, file] = entry;
+            const lower = name.toLowerCase();
+            try {
+              if (lower.endsWith('.docx')) {
+                // load .docx (which is a zip) and read document + headers + footers
+                const docArrayBuffer = await file.async('arraybuffer');
+                const innerZip = await JSZip.loadAsync(docArrayBuffer);
+                let allText = '';
+
+                // main document.xml
+                const docFile = innerZip.file('word/document.xml');
+                if (docFile) {
+                  allText += await docFile.async('string') + ' ';
+                }
+
+                // headers and footers
+                for (const innerName of Object.keys(innerZip.files)) {
+                  if (/^word\/(header|footer)\d*\.xml$/i.test(innerName)) {
+                    const xml = await innerZip.file(innerName).async('string');
+                    allText += xml + ' ';
+                  }
+                }
+
+                // optional: include comments, footnotes, endnotes
+                const optionalFiles = ['word/comments.xml', 'word/footnotes.xml', 'word/endnotes.xml'];
+                for (const p of optionalFiles) {
+                  const f = innerZip.file(p);
+                  if (f) {
+                    allText += await f.async('string') + ' ';
+                  }
+                }
+
+                // strip XML tags to produce plain text
+                let plain = allText.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+
+                // decode HTML/XML entities (e.g. &amp; -> &), remove control bytes and normalize spaces & ampersand spacing
+                try {
+                  const ta = document.createElement('textarea');
+                  ta.innerHTML = plain;
+                  plain = ta.value;
+                } catch (e) {
+                  // fallback: simple &amp; replacement
+                  plain = plain.replace(/&amp;/g, '&');
+                }
+
+                plain = plain
+                  .replace(/[\u0000-\u001F\u007F-\u009F]/g, ' ') // remove control chars/NULLs
+                  .replace(/[\xA0\u2000-\u200A\u202F\u205F\u3000]/g, ' ') // normalize weird spaces
+                  .replace(/\s*&\s*/g, ' & ') // ensure single space around &
+                  .replace(/\s+/g, ' ')
+                  .trim();
+
+                return plain;
+              }
+              // basic .doc (legacy) best-effort extractor — not perfect but finds plain text fragments
+              if (lower.endsWith('.doc')) {
+                const ab = await file.async('arraybuffer');
+                let text = '';
+
+
+                try {
+                  text = new TextDecoder('windows-1252').decode(ab);
+                } catch {
+                  try {
+                    text = new TextDecoder('iso-8859-1').decode(ab);
+                  } catch {
+                    text = new TextDecoder('utf-8').decode(ab);
+                  }
+                }
+
+                //Extract printable text runs, allowing for binary gaps
+                const runs = text.match(/(?:[\x20-\x7E\xA0-\xFF]{1,3}(?:[\x00-\x1F]{0,3})){4,}/g);
+                text = runs ? runs.join(' ') : text;
+
+                //decode any HTML-like entities & normalize
+                try {
+                  const ta2 = document.createElement('textarea');
+                  ta2.innerHTML = text;
+                  text = ta2.value;
+                } catch (e) {
+                  text = text.replace(/&amp;/g, '&');
+                }
+
+                //Normalize spaces, ampersand spacing and remove control chars
+                text = text
+                  .replace(/[\u0000-\u001F\u007F-\u009F]/g, ' ')
+                  .replace(/[\xA0\u2000-\u200A\u202F\u205F\u3000]/g, ' ')
+                  .replace(/\s*&\s*/g, ' & ')
+                  .replace(/\s+/g, ' ')
+                  .trim();
+
+                return text;
+              }
+
+              if (lower.endsWith('.pdf')) {
+                const pdfData = await file.async('uint8array');
+                const pdfDoc = await pdfjsLib.getDocument({ data: pdfData }).promise;
+                let txt = '';
+                for (let p = 1; p <= pdfDoc.numPages; p++) {
+                  const page = await pdfDoc.getPage(p);
+                  const content = await page.getTextContent();
+                  txt += content.items.map(it => it.str).join(' ') + ' ';
+                }
+                return txt;
+              }
+              if (lower.endsWith('.txt') || lower.endsWith('.xml') || lower.endsWith('.csv')) {
+                return await file.async('text');
+              }
+            } catch (e) {
+              console.warn('extract error', name, e);
+            }
+            return '';
+          }
+
+          //normalize string for search
+          function normalizeForSearch(s) {
+            return s
+              .toLowerCase()
+              .replace(/[\xA0\u2000-\u200A\u202F\u205F\u3000]/g, ' ') // normalize weird spaces
+              .replace(/\s+/g, ' ') // collapse multiple spaces
+              .trim();
+          }
+
+          //search text in zip
+          async function searchTextInZip(zipFile, labels, keyword, resultContainer, statusDiv) {
+            const zip = await JSZip.loadAsync(zipFile);
+            const fileEntries = Object.entries(zip.files).filter(([n, f]) => !f.dir);
+            const fileNames = fileEntries.map(([n]) => n.toLowerCase());
+
+            //for each label find matched files (same logic as checkZipFile)
+            for (const label of labels) {
+              const lowerLabel = label.toLowerCase().trim();
+              const parts = lowerLabel.split(/\s+/);
+
+              let matchedEntries = [];
+              switch (label) {
+                case "04":
+                  matchedEntries = fileEntries.filter(([name]) => {
+                    const base = name.split('/').pop().toLowerCase();
+                    return (base.startsWith("04-") || base.startsWith("11-")) && (base.endsWith(".docx") || base.endsWith(".doc"));
+                  });
+                  break;
+                case "06":
+                  matchedEntries = fileEntries.filter(([name]) => {
+                    const base = name.split('/').pop().toLowerCase();
+                    return base.startsWith("06-") && (base.endsWith(".docx") || base.endsWith(".doc"));
+                  });
+                  break;
+                case "07":
+                  matchedEntries = fileEntries.filter(([name]) => name.split('/').pop().toLowerCase().startsWith("07-"));
+                  break;
+                case "08":
+                  matchedEntries = fileEntries.filter(([name]) => name.split('/').pop().toLowerCase().startsWith("08-"));
+                  break;
+                default:
+                  matchedEntries = fileEntries.filter(([name]) => parts.every(part => name.toLowerCase().includes(part)));
+              }
+
+
+              if (!matchedEntries.length) {
+                const nlow = name => name.toLowerCase();
+                if (label === "customer report") {
+                  matchedEntries = fileEntries.filter(([name]) => nlow(name).includes("visit report"));
+                } else if (label === "13 Next") {
+                  matchedEntries = fileEntries.filter(([name]) => name.split('/').pop().toLowerCase().startsWith("13-"));
+                } else if (label === "14 APM") {
+                  matchedEntries = fileEntries.filter(([name]) => nlow(name).includes("apm"));
+                } else if (label === "17 CONTRACT") {
+                  matchedEntries = fileEntries.filter(([name]) => nlow(name).includes("contract"));
+                } else if (label === "18 Cer") {
+                  matchedEntries = fileEntries.filter(([name]) => nlow(name).includes("cer"));
+                } else if (label === "18 ACR") {
+                  matchedEntries = fileEntries.filter(([name]) => nlow(name).includes("acr"));
+                } else if (label === "18 CS") {
+                  matchedEntries = fileEntries.filter(([name]) => {
+                    const lname = nlow(name);
+                    return ["18", "sc"].every(p => lname.includes(p));
+                  });
+                }
+              }
+
+
+              // if no matched files, clear any previous search result
+              const resultSpan = resultContainer.querySelector(`.search-result[data-label="${label}"]`);
+              if (!matchedEntries.length) {
+                if (resultSpan) resultSpan.textContent = '';
+                continue;
+              }
+
+              // search inside matched entries
+              let foundText = false;
+              let snippet = '';
+              for (const entry of matchedEntries) {
+                const base = entry[0].split('/').pop().toLowerCase();
+
+                if (!(base.endsWith('.docx') || base.endsWith('.doc') || base.endsWith('.pdf') || base.endsWith('.txt') || base.endsWith('.xml') || base.endsWith('.csv'))) continue;
+                const text = normalizeForSearch(await extractTextFromEntry(entry));
+                if (!text) continue;
+
+                const normKeyword = normalizeForSearch(keyword);
+                const idx = text.indexOf(normKeyword);
+
+                if (idx !== -1) {
+                  foundText = true;
+                  const start = Math.max(0, idx - 40);
+                  snippet = text.substr(start, Math.min(160, text.length - start)).replace(/\s+/g, ' ').trim();
+                  break;
+                }
+              }
+
+              if (resultSpan) {
+                resultSpan.textContent = foundText ? ' — ✅text found' : ' — ❌ text not found';
+                resultSpan.title = snippet || '';
+              }
+            }
+          }
+          document.getElementById('summaryBar').textContent = `🗂️ ${files.length} ZIP(s) checked.`;
+
+          // Enable export button if we have results
+          document.getElementById('exportBtn').disabled = false;
+        }
+
+        function exportToExcel() {
+          const workbook = XLSX.utils.book_new();
+          const worksheetData = [];
+
+          // Get all ZIP blocks
+          const zipBlocks = document.querySelectorAll('.zip-block');
+
+          // Gather all unique labels from the first block (or define globally if consistent)
+          const allLabelsSet = new Set();
+          zipBlocks.forEach(block => {
+            block.querySelectorAll('.result-entry').forEach(entry => {
+              const labelMatch = entry.textContent.match(/["“](.*?)["”]/);
+              if (labelMatch) {
+                const label = labelMatch[1];
+                if (label !== "CDC") { // exclude CDC from Excel
+                  allLabelsSet.add(label);
+                }
+              }
+            });
+          });
+          const allLabels = Array.from(allLabelsSet);
+
+          // First row: header
+          worksheetData.push(["ZIP File", ...allLabels]);
+
+          // Process each ZIP block
+          zipBlocks.forEach(block => {
+            const title = block.querySelector('.zip-title span');
+            const zipName = title ? title.textContent.replace("File: ", "").trim() : "Unknown";
+
+            const entries = block.querySelectorAll('.result-entry');
+            const row = [zipName];
+
+            allLabels.forEach(label => {
+              let cellValue = "X"; // Default
+
+              entries.forEach(entry => {
+                const entryText = entry.textContent;
+
+                if (entryText.includes(`Found: "${label}"`)) {
+                  cellValue = "/";
+                }
+                else if (entryText.includes(`Partial: "${label}"`)) {
+                  cellValue = "-";
+                }
+                else if (entryText.includes(`CDC: "${label}"`)) {
+                  cellValue = "/";
+                }
+              });
+
+
+              row.push(cellValue);
+            });
+
+            worksheetData.push(row);
+          });
+
+          // Create worksheet and apply formatting
+          const ws = XLSX.utils.aoa_to_sheet(worksheetData);
+
+          // Style cells
+          const range = XLSX.utils.decode_range(ws['!ref']);
+          for (let i = 1; i <= range.e.r; i++) {
+            for (let j = 1; j <= range.e.c; j++) {
+              const cellAddress = XLSX.utils.encode_cell({ r: i, c: j });
+              const cell = ws[cellAddress];
+              if (!cell) continue;
+
+              let bg = "", font = "";
+
+              if (cell.v === "/") {
+                bg = "C6EFCE"; font = "006100"; // green
+              } else if (cell.v === "X") {
+                bg = "FFC7CE"; font = "9C0006"; // red
+              } else if (cell.v === "-") {
+                bg = "FFEB9C"; font = "9C6500"; // yellow
+              }
+
+              cell.s = {
+                fill: { patternType: "solid", fgColor: { rgb: bg } },
+                font: { color: { rgb: font }, bold: true },
+                alignment: { horizontal: "center", vertical: "center" }
+              };
+            }
+          }
+
+          ws['!cols'] = worksheetData[0].map(() => ({ wch: 15 }));
+
+          XLSX.utils.book_append_sheet(workbook, ws, "Results");
+          XLSX.writeFile(workbook, "EPAC_Zip_Results.xlsx");
+        }
+
+      </script>
+
+    </div>
+  </div>
+  <br><br><br><br><br><br>
+  <footer>
+    <p>© SGS Société Générale de Surveillance SA (2025) </p>
+    <p>Developed by Koonut T.</p>
+  </footer>
+</body>
+
+</html>
