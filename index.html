@@ -403,10 +403,92 @@
   <div class="container">
     <div class="newbody">
       <header style="margin-bottom: 30px;">
-        <h1 style="font-size: 28px; margin-bottom: 10px;">📦 EPAC ZIP Checker</h1>
+        <h1 class="game-pop-up" style="cursor:pointer;" title="Open mini game">📦EPAC ZIP Checker</h1>
+
         <p style="color: #555; margin: 5px;">Analyze and export ZIP file contents efficiently.</p>
         <h3 style="color: #e21313; margin: 5px; ">*Epac CertIQ must be open along (If you want to Query)*</h3>
       </header>
+      <!-- Mini Game Modal -->
+      <div id="gameModal" class="modal" aria-hidden="true">
+        <div class="modal-content" style="width:360px; max-width:95%;">
+          <span class="close-btn" id="closeGameModal">&times;</span>
+          <div id="miniGame">
+            <h2 style="margin-top:0;">4-Digit Guess Game</h2>
+            <p style="margin:6px 0 10px 0;">Guess the 4-digit number (no repeating digits). Get <b>4A</b> within 10
+              tries!</p>
+            <input id="gp_guessInput" maxlength="4" placeholder="Enter 4 digits"
+              style="width:95%;padding:8px;font-size:14px;" />
+            <button id="gp_submit" class="custom-button" style="width:95%;margin-top:10px;">Submit Guess</button>
+            <button id="gp_restart" class="custom-button"
+              style="width:95%;margin-top:8px;background:#d1e7ff;color:#000;">Restart Game</button>
+            <div id="gp_log"
+              style="margin-top:12px; white-space:pre-line; font-family:monospace; max-height:260px; overflow:auto; background:#fafafa;padding:8px;border-radius:6px;border:1px solid #eee;">
+            </div>
+          </div>
+        </div>
+      </div>
+      <script>
+        (function () {
+          let secret, attempts;
+          function generateNumber() {
+            const digits = [];
+            while (digits.length < 4) {
+              const d = Math.floor(Math.random() * 10);
+              if (!digits.includes(d)) digits.push(d);
+            }
+            return digits.join('');
+          }
+          function initGame() {
+            secret = generateNumber();
+            attempts = 0;
+            document.getElementById('gp_log').innerText = '';
+            document.getElementById('gp_guessInput').value = '';
+            document.getElementById('gp_guessInput').disabled = false;
+          }
+          function makeGuess() {
+            const inputEl = document.getElementById('gp_guessInput');
+            const log = document.getElementById('gp_log');
+            const input = inputEl.value.trim();
+            if (!/^\d{4}$/.test(input)) { alert("Please enter exactly 4 digits."); return; }
+            if (new Set(input).size !== 4) { alert("Digits must not repeat."); return; }
+            attempts++;
+            let A = 0, B = 0;
+            for (let i = 0; i < 4; i++) {
+              if (input[i] === secret[i]) A++;
+              else if (secret.includes(input[i])) B++;
+            }
+            log.innerText += `Guess ${attempts}: ${input} → ${A}A ${B}B\n`;
+            log.scrollTop = log.scrollHeight;
+            if (A === 4) {
+              log.innerText += `🎉 YOU WIN! The number was ${secret}\n`;
+              inputEl.disabled = true;
+              return;
+            }
+            if (attempts >= 10) {
+              log.innerText += `❌ GAME OVER! The number was ${secret}\n`;
+              inputEl.disabled = true;
+            }
+          }
+          // wire UI
+          document.addEventListener('click', (e) => {
+            if (e.target.closest('.game-pop-up')) {
+              document.getElementById('gameModal').style.display = 'flex';
+              initGame();
+            }
+          });
+          document.getElementById('closeGameModal').addEventListener('click', () => {
+            document.getElementById('gameModal').style.display = 'none';
+          });
+          // close on outside click (modal already handled globally, keep consistent)
+          document.getElementById('gp_submit').addEventListener('click', makeGuess);
+          document.getElementById('gp_restart').addEventListener('click', initGame);
+          document.getElementById('gp_guessInput').addEventListener('keydown', (ev) => {
+            if (ev.key === 'Enter') makeGuess();
+          });
+        })();
+        
+      </script>
+
       <!-- Label list -->
       <!--<div id="labelList" style="font-weight:bold; margin-bottom:20px;">
     04, Customer Report, Internal Report , 06, 07, 08, 12 CDS, 13 Next, 14 APM, 16 CHR, 17 CONTRACT, 18 Cert, 18 ACR, 18 CS, CDC, CDC Report
@@ -468,7 +550,7 @@
 
         // for getting labels
         function getLabelsForFile() {
-          return ["04", "Customer report", "Internal report","11", "06", "07", "08",  "12 CDS", "13 Next", "14 APM", "16 CHR", "17 CONTRACT", "18 Cer", "18 ACR", "18 CS", "12 CDC", "CDC Report"];
+          return ["04", "Customer report", "Internal report", "11", "06", "07", "08", "12 CDS", "13 Next", "14 APM", "16 CHR", "17 CONTRACT", "18 Cer", "18 ACR", "18 CS", "12 CDC", "CDC Report"];
         }
 
         let allResults = []; // Store all results for export
