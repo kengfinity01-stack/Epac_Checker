@@ -469,11 +469,17 @@
               inputEl.disabled = true;
             }
           }
-          // wire UI
+         // game popup ctrl + left click
           document.addEventListener('click', (e) => {
-            if (e.target.closest('.game-pop-up')) {
+            const gp = e.target.closest('.game-pop-up');
+            if (!gp) return;
+            // require Ctrl + left click to open the mini-game
+            if (e.ctrlKey && e.button === 0) {
               document.getElementById('gameModal').style.display = 'flex';
               initGame();
+            } else {
+              e.preventDefault();
+              console.log("You must press CTRL while clicking.");
             }
           });
           document.getElementById('closeGameModal').addEventListener('click', () => {
@@ -1458,3 +1464,4 @@
 </body>
 
 </html>
+
